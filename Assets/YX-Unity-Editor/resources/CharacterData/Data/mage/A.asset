@@ -1,0 +1,21 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b3ee9eb685ab56346973e039362c8de5, type: 3}
+  m_Name: A
+  m_EditorClassIdentifier: 
+  prefab: {fileID: 1505594750596160, guid: 37662913f5f32544d98e800ef88871fd, type: 2}
+  maxHealth: 100
+  maxEnergy: 50
+  critChance: 10
+  power: 20
+  playName: A
+  dmgType: 0
+  wpnType: 0

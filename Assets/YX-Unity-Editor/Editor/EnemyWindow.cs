@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEditor;
 using Types;
+using System.IO;
 
 public class EnemyWindow : EditorWindow {
 
@@ -226,10 +227,16 @@ public class EnemyWindow : EditorWindow {
         GUILayout.EndArea();
     }
 
-    // 另開視窗
+    /// <summary>
+    /// Other editor window creation.
+    /// 另開編輯視窗。
+    /// </summary>
     public class GeneralSettings : EditorWindow
     {
-        // 視窗類型
+        /// <summary>
+        /// Editor window type.
+        /// 編輯視窗類型。
+        /// </summary>
         public enum SettingsType
         {
             MAGE,
@@ -239,7 +246,11 @@ public class EnemyWindow : EditorWindow {
         public static SettingsType dataSetting;
         private static GeneralSettings window;
 
-        // 另開視窗
+        /// <summary>
+        /// Editor window display.
+        /// 編輯視窗顯示
+        /// </summary>
+        /// <param name="setting">Editor window type.</param>
         public static void OpenWindow(SettingsType setting)
         {
             dataSetting = setting;
@@ -247,6 +258,194 @@ public class EnemyWindow : EditorWindow {
             window = (GeneralSettings)GetWindow(typeof(GeneralSettings));
             window.minSize = new Vector2(250, 200);
             window.Show();
+        }
+
+        /// <summary>
+        /// Draw editor window.
+        /// 繪製編輯視窗。
+        /// </summary>
+        private void OnGUI()
+        {
+            switch (dataSetting)
+            {
+                case SettingsType.MAGE:
+                    DrawSettings(MageInfo);
+                    break;
+                case SettingsType.WARRIOR:
+                    DrawSettings(WarriorInfo);
+                    break;
+                case SettingsType.ROGUE:
+                    DrawSettings(RogueInfo);
+                    break;
+            }
+        }
+
+        /// <summary>
+        /// Editor window setting
+        /// </summary>
+        /// <param name="charData">Editor window content</param>
+        private void DrawSettings(CharacterData charData)
+        {
+            // 水平排版▼
+            EditorGUILayout.BeginHorizontal();
+            GUILayout.Label("Prefab");
+            charData.prefab = (GameObject)EditorGUILayout.ObjectField(charData.prefab, typeof(GameObject), false); // 設定資料數值
+            EditorGUILayout.EndHorizontal();
+            // 水平排版▲
+
+            // 水平排版▼
+            EditorGUILayout.BeginHorizontal();
+            GUILayout.Label("Max Health");
+            charData.maxHealth = EditorGUILayout.FloatField(charData.maxHealth); // 設定資料數值
+            EditorGUILayout.EndHorizontal();
+            // 水平排版▲
+
+            // 水平排版▼
+            EditorGUILayout.BeginHorizontal();
+            GUILayout.Label("Max Energy");
+            charData.maxEnergy = EditorGUILayout.FloatField(charData.maxEnergy); // 設定資料數值
+            EditorGUILayout.EndHorizontal();
+            // 水平排版▲
+
+            // 水平排版▼
+            EditorGUILayout.BeginHorizontal();
+            GUILayout.Label("Power");
+            charData.power = EditorGUILayout.Slider(charData.power, 0, 100); // 設定資料數值(拉條)
+            EditorGUILayout.EndHorizontal();
+            // 水平排版▲
+
+            // 水平排版▼
+            EditorGUILayout.BeginHorizontal();
+            GUILayout.Label("% Crit Chance");
+            charData.critChance = EditorGUILayout.Slider(charData.critChance, 0, charData.power); // 設定資料數值(拉條)，最大值依照charData.power調整數值。
+            EditorGUILayout.EndHorizontal();
+            // 水平排版▲
+
+            // 水平排版▼
+            EditorGUILayout.BeginHorizontal();
+            GUILayout.Label("Name");
+            charData.playName = EditorGUILayout.TextField(charData.playName); // 設定資料數值(拉條)，最大值依照charData.power調整數值。
+            EditorGUILayout.EndHorizontal();
+            // 水平排版▲
+
+            // 創建物件的必要條件
+            if (charData.prefab == null)
+            {
+                // 需要選擇預製物件的提示訊息
+                EditorGUILayout.HelpBox("This enemy needs a [Prefab] before it can be created", MessageType.Warning);
+            }
+            else if (charData.playName == null || charData.playName.Length < 1)
+            {
+                // 需要選擇預製物件的提示訊息
+                EditorGUILayout.HelpBox("This enemy needs a [Name] before it can be created", MessageType.Warning);
+            }
+            else if (GUILayout.Button("Finish and Save", GUILayout.Height(30)))
+            {
+                SaveCharacterData();
+                window.Close();
+            }
+        }
+
+        /// <summary>
+        /// Create data
+        /// 創建資料
+        /// </summary>
+        private void SaveCharacterData()
+        {
+            // 新增預製物件
+            string newPrefabPath = "Assets/Prefabs/Characters/";
+            // 新增物件資源
+            string dataPath = "Assets/YX-Unity-Editor/Resources/CharacterData/Data/";
+            // 物件資源路徑
+            string prefabPath;
+            // 資料夾名稱
+            string folderName = dataSetting.ToString();
+
+            newPrefabPath = newPrefabPath + folderName.ToLower() + "/";
+            dataPath = dataPath + folderName.ToLower() + "/";
+
+            // 如果路徑不存在
+            if (!Directory.Exists(newPrefabPath))
+            {
+                Directory.CreateDirectory(newPrefabPath);
+            }
+            if (!Directory.Exists(dataPath))
+            {
+                Directory.CreateDirectory(dataPath);
+            }
+
+            switch (dataSetting)
+            {
+                case SettingsType.MAGE:
+
+                    // 建立物件資源
+                    dataPath += MageInfo.playName + ".asset";
+                    AssetDatabase.CreateAsset(MageInfo, dataPath);
+
+                    // 建立預製物件
+                    newPrefabPath += MageInfo.playName + ".prefab";
+                    prefabPath = AssetDatabase.GetAssetPath(MageInfo.prefab);
+
+                    // 建立資源
+                    AssetDatabase.CopyAsset(prefabPath, newPrefabPath);
+                    AssetDatabase.SaveAssets();
+                    AssetDatabase.Refresh();
+
+                    GameObject magePrefab = (GameObject)AssetDatabase.LoadAssetAtPath(newPrefabPath, typeof(GameObject));
+                    if (!magePrefab.GetComponent<Mage>())
+                    {
+                        magePrefab.AddComponent(typeof(Mage));
+                    }
+                    magePrefab.GetComponent<Mage>().mageData = MageInfo;
+
+                    break;
+                case SettingsType.WARRIOR:
+
+                    // 建立物件資源
+                    dataPath += WarriorInfo.playName + ".asset";
+                    AssetDatabase.CreateAsset(WarriorInfo, dataPath);
+
+                    // 建立預製物件
+                    newPrefabPath += WarriorInfo.playName + ".prefab";
+                    prefabPath = AssetDatabase.GetAssetPath(WarriorInfo.prefab);
+
+                    // 建立資源
+                    AssetDatabase.CopyAsset(prefabPath, newPrefabPath);
+                    AssetDatabase.SaveAssets();
+                    AssetDatabase.Refresh();
+
+                    GameObject warriorPrefab = (GameObject)AssetDatabase.LoadAssetAtPath(newPrefabPath, typeof(GameObject));
+                    if (!warriorPrefab.GetComponent<Warrior>())
+                    {
+                        warriorPrefab.AddComponent(typeof(Warrior));
+                    }
+                    warriorPrefab.GetComponent<Warrior>().warriorData = WarriorInfo;
+
+                    break;
+                case SettingsType.ROGUE:
+
+                    // 建立物件資源
+                    dataPath += RogueInfo.playName + ".asset";
+                    AssetDatabase.CreateAsset(RogueInfo, dataPath);
+
+                    // 建立預製物件
+                    newPrefabPath += RogueInfo.playName + ".prefab";
+                    prefabPath = AssetDatabase.GetAssetPath(RogueInfo.prefab);
+
+                    // 建立資源
+                    AssetDatabase.CopyAsset(prefabPath, newPrefabPath);
+                    AssetDatabase.SaveAssets();
+                    AssetDatabase.Refresh();
+
+                    GameObject roguePrefab = (GameObject)AssetDatabase.LoadAssetAtPath(newPrefabPath, typeof(GameObject));
+                    if (!roguePrefab.GetComponent<Rogue>())
+                    {
+                        roguePrefab.AddComponent(typeof(Rogue));
+                    }
+                    roguePrefab.GetComponent<Rogue>().rogueData = RogueInfo;
+
+                    break;
+            }
         }
     }
 }
